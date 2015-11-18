@@ -1,0 +1,26 @@
+{
+  "name": "jSequencer",
+  "version": "1.0.0",
+  "author": "Mohamed Farouk <mohammed.farouk@hotmail.com>",
+  "description": "",
+  "contributors": [
+  ],
+  "main": null,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mohamedfarouk/jsequencer"
+  },
+  "keywords": [],
+  "dependencies": { },
+  "devDependencies": {
+    "grunt": "0.4.x",
+    "grunt-contrib-concat": "0.x.x",
+    "grunt-contrib-uglify": "0.x.x",
+    "grunt-contrib-jasmine": "0.x.x",
+    "grunt-contrib-clean": "0.x.x",
+    "grunt-contrib-copy": "0.x.x",
+    "grunt-contrib-jshint": "0.x.x"
+  },
+  "bundledDependencies": [],
+  "license": "MIT"
+}
