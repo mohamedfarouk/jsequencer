@@ -1,11 +1,4 @@
-﻿/**
- * jSequencer v1.0.0 - 2015-11-18
- * 
- *
- * Copyright (c) 2015 Mohamed Farouk <mohammed.farouk@hotmail.com>
- * Licensed MIT
- */
-(function(root, factory) {
+﻿(function(root, factory) {
 	if (typeof define === 'function' && define.amd) {
 		define(['exports'], function(exports) {
 			// Export global even in AMD case in case this script is loaded with
