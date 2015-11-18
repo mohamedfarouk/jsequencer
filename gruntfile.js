@@ -1,5 +1,5 @@
 /*global module:false*/
-
+/*globals define */
 /**
  * Javascript Project Boilerplate
  * Version 0.1.0
