@@ -292,6 +292,5 @@
 			return executionContext;
 		};
 	};
-
 	return JSequencer;
 }));
