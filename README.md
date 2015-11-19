@@ -1,5 +1,7 @@
 # JSequencer
 ### Motivation
+like anonymous functions, but hate deep nested callbacks ?! here where JSequencer fit
+
 imagin having large number of call backs in sequence, somthing like
 
 ```javascript
