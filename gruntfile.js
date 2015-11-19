@@ -1,17 +1,17 @@
 /*global module:false*/
-/*globals define */
+
 /**
  * Javascript Project Boilerplate
  * Version 0.1.0
  */
-module.exports = function(grunt) {
+module.exports = function (grunt) {
     "use strict";
     var pkg, config;
 
     pkg = grunt.file.readJSON('package.json');
 
     config = {
-        banner : [
+        banner: [
             '/**\n',
             ' * <%= pkg.name %> v<%= pkg.version %> - <%= grunt.template.today("yyyy-mm-dd") %>\n',
             ' * <%= pkg.description %>\n',
@@ -21,11 +21,16 @@ module.exports = function(grunt) {
             ' */\n'
         ].join(''),
 
-        sources : [
-            'src/jSequencer.js'
+        sources: [
+            'src/intro.js',
+
+            // add'l packages
+
+            'src/export.js',
+            'src/outro.js'
         ],
-        pkg : pkg,
-        uglifyFiles : {}
+        pkg: pkg,
+        uglifyFiles: {}
     };
 
     // setup dynamic filenames
@@ -35,43 +40,43 @@ module.exports = function(grunt) {
 
     // Project configuration.
     grunt.initConfig({
-        pkg : config.pkg,
-        lint : {
-            files : ['gruntfile.js', 'test/*.js', 'src/*']
+        pkg: config.pkg,
+        lint: {
+            files: ['gruntfile.js', 'test/*.js', 'src/*']
         },
-        clean : {
-            dist : ['dist/']
+        clean: {
+            dist: ['dist/']
         },
-        concat : {
-            options : {
-                stripBanners : true,
-                banner : config.banner
+        concat: {
+            options: {
+                stripBanners: true,
+                banner: config.banner
             },
-            dist : {
-                src : config.sources,
-                dest : config.dist
+            dist: {
+                src: config.sources,
+                dest: config.dist
             }
         },
-        uglify : {
-            options : { mangle : true },
-            dist : {
-                files : config.uglifyFiles
+        uglify: {
+            options: { mangle: true },
+            dist: {
+                files: config.uglifyFiles
             }
         },
-        jasmine : {
-            tests : {
-                src : ['dist/', '.js'].join(config.versioned),
-                options : {
-                    specs : 'test/*.spec.js',
-                    //template : 'test/grunt.tmpl'
+        jasmine: {
+            tests: {
+                src: ['src/*.js'],
+                options: {
+                    specs: 'test/spec/*.spec.js',
+                    //template: 'test/grunt.tmpl'
                 }
             }
         },
-        jshint : {
-            options : {
-                jshintrc : 'jshint.json'
+        jshint: {
+            options: {
+                jshintrc: 'jshint.json'
             },
-            source : config.dist
+            source: config.dist
         }
     });
 
@@ -84,5 +89,4 @@ module.exports = function(grunt) {
 
     // Default task.
     grunt.registerTask('default', ['clean', 'concat', 'jshint', 'uglify', 'jasmine']);
-
 };

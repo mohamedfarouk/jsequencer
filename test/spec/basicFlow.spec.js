@@ -24,12 +24,17 @@ describe("basic flow specs", function () {
 		.add(add100WithPause)
 		.add(mul100)
 		.add(div5)
-		.onStep(function () { console.log('step executed'); })
-		.onPaused(function () { console.log('paused'); })
-		.onResumed(function () { console.log('resumed'); })
-		.onCompleted(function (x) {
+		.add(add100WithPause)
+		.add(add100)
+		.add(add100WithPause)
+		.add(sub50)
+		.onStep(function (context) { console.log('step executed'); })
+		.onPaused(function (context) { console.log('paused'); })
+		.onResumed(function (context) { console.log('resumed'); })
+		.onCompleted(function (context, x) {
 		    console.log('finished');
 		    result = x;
+		    console.log(context.getResults());
 		    done();
 		})
 		.context();
@@ -38,7 +43,7 @@ describe("basic flow specs", function () {
     });
 
     it("check final value", function (done) {
-        expect(result).toBe(102000);
+        expect(result).toBe(102250);
         done();
     });
 });

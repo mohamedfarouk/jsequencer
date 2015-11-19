@@ -42,113 +42,130 @@
 	var STAT_FAILED = JSequencer.STAT_FAILED = "FAILED";
 	
 	function ExecutionContext(funcTable, resumeOnError, stateChangeCallback) {
-            var state = STAT_NOT_STARTED;
-            var currentStepIndex;
-            var results = [];
+	    var state = STAT_NOT_STARTED;
+	    var currentStepIndex;
+	    var results = [];
+	    var context = {};
 
-            function runSingleStep(stepIndex, lastResult) {
+	    function runSingleStep(stepIndex, lastResult) {
 
-                //each call back is added as object like 
-                /*
-                 {
-                    func: function to call,
-                    context: function this object,
-                    params: function params (could be array or another func and will use the same context)
-                 }
-                 // each func will be passed execution context
-                 */
-                var context = funcTable[stepIndex].context;
-                var func = funcTable[stepIndex].func;
-                var params = funcTable[stepIndex].params;
-                if (typeof params === "function") {
-                    params = params.call(context);
-                }
-                if (params instanceof Array) {
-                    params.push(lastResult);// add last result
-                    params.push(this);//add context to params
-                }
-                else {
-                    params = [params, lastResult, this];
-                }
-                setState.call(this, STAT_EXECUTING);
-                var result = func.apply(context, params);
-                return result;
-            }
+	        //each call back is added as object like 
+	        /*
+             {
+                func: function to call,
+                context: function this object,
+                params: function params (could be array or another func and will use the same context)
+             }
+             // each func will be passed execution context
+             */
+	        var context = funcTable[stepIndex].context;
+	        var func = funcTable[stepIndex].func;
+	        var params = funcTable[stepIndex].params;
+	        if (typeof params === "function") {
+	            params = params.call(context);
+	        }
+	        if (params instanceof Array) {
+	            params.push(lastResult);// add last result
+	            params.push(this);//add context to params
+	        }
+	        else {
+	            params = [params, lastResult, this];
+	        }
+	        setState.call(this, STAT_EXECUTING, currentStepIndex);
+	        var result = func.apply(context, params);
+	        return result;
+	    }
 
-            function runSequence(resumeIndex, lastResult) {
-                currentStepIndex = resumeIndex;
-                var returnVal;
-                try{
-                    returnVal = runSingleStep.call(this, currentStepIndex, lastResult);
-                }
-                catch (ex) {
-                    results[currentStepIndex] = undefined;
-                    stateChangeCallback.call(this, STAT_ERROR, ex);
-                }
+	    function runSequence(resumeIndex, lastResult) {
+	        currentStepIndex = resumeIndex;
+	        var returnVal;
+	        try {
+	            returnVal = runSingleStep.call(this, currentStepIndex, lastResult);
+	        }
+	        catch (ex) {
+	            results[currentStepIndex] = undefined;
+	            setState.call(this, STAT_ERROR, currentStepIndex, ex, lastResult);
+	        }
 
-                if (state !== STAT_PAUSED) {
-                    results[currentStepIndex] = returnVal;
-                    stateChangeCallback.call(this, STAT_STEP_EXECUTED, returnVal);
+	        if (state !== STAT_PAUSED) {
+	            results[currentStepIndex] = returnVal;
+	            stateChangeCallback.call(this, STAT_STEP_EXECUTED, returnVal);
 
-                    if (currentStepIndex >= funcTable.length - 1) {
-                        setState.call(this, STAT_COMPLETED, returnVal);
-                        return;
-                    }
-                    else {
-                        currentStepIndex++;
-                        runSequence.call(this, currentStepIndex, returnVal);
-                    }
-                }
-            }
+	            if (currentStepIndex >= funcTable.length - 1) {
+	                setState.call(this, STAT_COMPLETED, currentStepIndex, returnVal);
+	                return;
+	            }
+	            else {
+	                currentStepIndex++;
+	                runSequence.call(this, currentStepIndex, returnVal);
+	            }
+	        }
+	    }
 
-            function setState(newState) {
-                state = newState;
-                stateChangeCallback.apply(this, arguments);
-            }
+	    function setState(newState) {
+	        state = newState;
+	        stateChangeCallback.apply(this, arguments);
+	    }
 
-           
-            this.start = function (inArguments) {
-                currentStepIndex = 0;
-                runSequence.call(this, currentStepIndex, inArguments);
-            };
+	    this.start = function (inArguments) {
+	        currentStepIndex = 0;
+	        runSequence.call(this, currentStepIndex, inArguments);
+	    };
 
-            this.pause = function () {
-                if (state !== STAT_EXECUTING){
-                    throw "cannot call pause unless state is " + STAT_EXECUTING + " current state is " + state;
-                }
-				setState.call(this, STAT_PAUSED);
-            };
+	    this.pause = function () {
+	        if (state !== STAT_EXECUTING) {
+	            throw "cannot call pause unless state is " + STAT_EXECUTING + " current state is " + state;
+	        }
+	        setState.call(this, STAT_PAUSED, currentStepIndex);
+	    };
 
-            this.resume = function (lastResult) {
-                if (state !== STAT_PAUSED){
-                    throw "cannot call resume unless state is " + STAT_PAUSED + " current state is " + state;
-				}
-                setState.call(this, STAT_RESUMED);
-                results[currentStepIndex] = lastResult;
-                stateChangeCallback.call(this, STAT_STEP_EXECUTED, lastResult);
+	    this.resume = function (lastResult) {
+	        if (state !== STAT_PAUSED && state !== STAT_ERROR) {
+	            throw "cannot call resume unless state is " + STAT_PAUSED + "or " + STAT_ERROR + " current state is " + state;
+	        }
+	        setState.call(this, STAT_RESUMED, currentStepIndex);
+	        results[currentStepIndex] = lastResult;
+	        stateChangeCallback.call(this, STAT_STEP_EXECUTED, currentStepIndex, lastResult);
 
-                currentStepIndex++;
-                runSequence.call(this, currentStepIndex, lastResult);
-            };
+	        if (currentStepIndex >= funcTable.length - 1) {
+	            setState.call(this, STAT_COMPLETED, currentStepIndex, lastResult);
+	            return;
+	        }
+	        else {
+	            currentStepIndex++;
+	            runSequence.call(this, currentStepIndex, lastResult);
+	        }
+	    };
 
-            this.break = function (lastResult) {
-                if (state !== STAT_EXECUTING && state !== STAT_PAUSED){
-                    throw "cannot call pause unless state is " + STAT_EXECUTING + " or " + STAT_PAUSED + " current state is " + state;
-                }
-				currentStepIndex = funcTable.length;
-                setState.call(this, STAT_COMPLETED, lastResult);
-                return;
-            };
+	    this.break = function (lastResult) {
+	        if (state !== STAT_EXECUTING && state !== STAT_PAUSED) {
+	            throw "cannot call pause unless state is " + STAT_EXECUTING + " or " + STAT_PAUSED + " current state is " + state;
+	        }
+	        setState.call(this, STAT_COMPLETED, currentStepIndex, lastResult);
+	        return;
+	    };
 
-            this.getResults = function () {
-                // create copy of results array
-                var newResults = [];
-                for (var i in results){
-                    newResults.push(results[i]);
-				}
-                return newResults;
-            };
-        }
+	    this.getCurrentStep = function () {
+	        return currentStepIndex;
+	    };
+
+	    this.getResults = function () {
+	        // create copy of results array
+	        var newResults = [];
+	        for (var i in results) {
+	            newResults.push(results[i]);
+	        }
+	        return newResults;
+	    };
+
+	    this.set = function (key, val) {
+	        context[key] = val;
+	    },
+
+        this.get = function (key) {
+            return context[key];
+        };
+	}
 
 	JSequencer.Sequencer = function(options) {
 		var funcTable = [];
@@ -168,11 +185,11 @@
 		}
 		var executionContext = null;
 
-		function stateChanged(state) {
+		function stateChanged(state, stepIndex) {
 			// this function executed with this = ExecutionContext object
 			if (state === STAT_COMPLETED) {
 				if (typeof completedCallback === "function"){
-					completedCallback.call(completedContext, arguments[1], this, this.getResults());
+				    completedCallback.call(completedContext, this, arguments[2], this.getResults());
 				}
 			}
 			else if (state === STAT_STEP_EXECUTED) {
@@ -186,20 +203,22 @@
 				}
 			}
 			else if (state === STAT_FAILED) {
-				if (typeof failedCallback === "function"){
-					failedCallback.call(failedContext, this, arguments[1]);
+			    if (typeof failedCallback === "function") {
+			        var args = { stepIndex: stepIndex, error: arguments[2], lastResult: arguments[3]};
+			        failedCallback.call(failedContext, this, args);
 				}
 			}
 			else if (state === STAT_ERROR) {
-				var errorArgs = { resume: options.resumeOnError, error: arguments[1] };
+			    var args = { stepIndex: stepIndex, resume: options.resumeOnError, error: arguments[2], lastResult: arguments[3], newResult: undefined };
 				if (typeof errorCallback === "function") {
-					errorCallback.call(errorContext, this, errorArgs);
+				    errorCallback.call(errorContext, this, args);
 				}
-				if (errorArgs.resume){
-					this.resume();
+				if (args.resume) {
+				    var validResult = args.newResult === undefined ? args.lastResult : args.newResult;
+				    this.resume(validResult);
 				}
 				else{
-					stateChanged(STAT_FAILED, arguments[1]);
+				    stateChanged.call(this, STAT_FAILED, stepIndex, arguments[2], arguments[3]);
 				}
 			}
 			else if (state === STAT_RESUMED) {
