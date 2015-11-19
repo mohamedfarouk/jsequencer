@@ -64,8 +64,7 @@ var sequencer = new JSequencer.Sequencer()
 .onCompleted(function (context, x) {
 	console.log('finished');
 	result = x;
-	console.log(result);
-	done();
+	console.log(result); // prints 150
 })
 .context();
 
