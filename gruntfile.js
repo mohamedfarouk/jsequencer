@@ -22,12 +22,7 @@ module.exports = function (grunt) {
         ].join(''),
 
         sources: [
-            'src/intro.js',
-
-            // add'l packages
-
-            'src/export.js',
-            'src/outro.js'
+            'src/jSequencer.js',
         ],
         pkg: pkg,
         uglifyFiles: {}

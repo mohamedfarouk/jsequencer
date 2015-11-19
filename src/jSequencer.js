@@ -160,7 +160,7 @@
 
 	    this.set = function (key, val) {
 	        context[key] = val;
-	    },
+	    };
 
         this.get = function (key) {
             return context[key];
@@ -189,7 +189,7 @@
 			// this function executed with this = ExecutionContext object
 			if (state === STAT_COMPLETED) {
 				if (typeof completedCallback === "function"){
-				    completedCallback.call(completedContext, this, arguments[2], this.getResults());
+				    completedCallback.call(completedContext, this, arguments[2]);
 				}
 			}
 			else if (state === STAT_STEP_EXECUTED) {
