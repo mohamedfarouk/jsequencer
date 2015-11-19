@@ -33,32 +33,39 @@ but if those functions are async ajax calls, this flow will terminate before the
 Now, imagin if you can just write it in sequence, but still run as callback, thats what JSequencer do
 
 ```javascript
-function mul100(x) { return x * 100; }
-function add100(x) { return x + 100; }
-function sub50(x) { return x - 50; }
-function div5(x) { return x / 5; }
-function toPause(x, context) {
+var sequencer = new JSequencer.Sequencer()
+.add(function (x) {
+	return x * 100;
+})
+.add(function (x) {
+	return x - 50;
+})
+.add(function (x, context) {
     context.pause();
     $('#resume').click(function () {
-        context.resume(x);
+        context.resume(x + 100);
     });
-}
-
-var sequencer = new JSequencer.Sequencer()
-.add(mul100)
-.add(add100)
-.add(sub50)
-.add(add100)
-.add(mul100)
-.add(div5)
-.add(toPause)
-.add(mul100)
-.onStep(function () { console.log('step executed'); })
-.onPaused(function () { console.log('paused'); })
-.onResumed(function () { console.log('resumed'); })
-.onCompleted(function (x) {
+})
+.add(function (x) {
+    return x / 5;
+})
+.add(function (x) {
+    return x + 100;
+})
+.add(function (x, context) {
+    context.pause();
+    $('#resume').click(function () {
+        context.resume(x + 20);
+    });
+})
+.onStep(function (context) { console.log('step executed'); })
+.onPaused(function (context) { console.log('paused'); })
+.onResumed(function (context) { console.log('resumed'); })
+.onCompleted(function (context, x) {
 	console.log('finished');
-	alert(x);
+	result = x;
+	console.log(result);
+	done();
 })
 .context();
 
