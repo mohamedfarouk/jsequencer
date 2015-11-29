@@ -4,25 +4,25 @@ describe("basic flow specs", function () {
 
     beforeEach(function (done) {
         var sequencer = new JSequencer.Sequencer({ resumeOnError: true })
-		.add(function (x) {
+		.add(function (context, x) {
 		    return x * 100;
 		})
-        .add(function (x) {
+        .add(function (context, x) {
 		    return x - 50;
         })
-        .add(function (x, context) {
+        .add(function (context, x) {
             context.pause();
             setTimeout(function () {
                 context.resume(x + 100);
             }, 5);
         })
-        .add(function (x) {
+        .add(function (context, x) {
             return x / 5;
         })
-        .add(function (x) {
+        .add(function (context, x) {
             return x + 100;
         })
-        .add(function (x, context) {
+        .add(function (context, x) {
             context.pause();
             setTimeout(function () {
                 context.resume(x + 20);

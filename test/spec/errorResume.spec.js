@@ -2,12 +2,12 @@ describe("error resume", function () {
 
     var result = 1;
 
-    function mul100(x) { return x * 100; }
-    function add100(x) { return x + 100; }
-    function sub50(x) { return x - 50; }
-    function div5(x) { return x / 5; }
-    function throwError(x) { throw "this is error step"; }
-    function add100WithPause(x, context) {
+    function mul100(context, x) { return x * 100; }
+    function add100(context, x) { return x + 100; }
+    function sub50(context, x) { return x - 50; }
+    function div5(context, x) { return x / 5; }
+    function throwError(context, x) { throw "this is error step"; }
+    function add100WithPause(context, x) {
         context.pause();
         setTimeout(function () {
             context.resume(x + 100);

@@ -39,6 +39,7 @@
 	var STAT_PAUSED = JSequencer.STAT_PAUSED = "PAUSED";
 	var STAT_RESUMED = JSequencer.STAT_RESUMED = "RESUMED";
 	var STAT_COMPLETED = JSequencer.STAT_COMPLETED = "COMPLETED";
+	var STAT_BREAK = JSequencer.STAT_FAILED = "BREAK";
 	var STAT_FAILED = JSequencer.STAT_FAILED = "FAILED";
 	
 	function ExecutionContext(funcTable, resumeOnError, stateChangeCallback) {
@@ -64,13 +65,15 @@
 	        if (typeof params === "function") {
 	            params = params.call(context);
 	        }
-	        if (params instanceof Array) {
-	            params.push(lastResult);// add last result
-	            params.push(this);//add context to params
+	        if (params === undefined) {
+	            params = [];
 	        }
-	        else {
-	            params = [params, lastResult, this];
+	        if (!(params instanceof Array)) {
+	            params = [params];
 	        }
+	        params.push(this);//add context to params
+	        params.push(lastResult);// add last result
+
 	        setState.call(this, STAT_EXECUTING, currentStepIndex);
 	        var result = func.apply(context, params);
 	        return result;
@@ -87,7 +90,11 @@
 	            setState.call(this, STAT_ERROR, currentStepIndex, ex, lastResult);
 	        }
 
-	        if (state !== STAT_PAUSED) {
+	        if (state === STAT_BREAK) {
+	            results[currentStepIndex] = returnVal;
+	            setState.call(this, STAT_COMPLETED, currentStepIndex, returnVal);
+	        }
+	        else if (state !== STAT_PAUSED) {
 	            results[currentStepIndex] = returnVal;
 	            stateChangeCallback.call(this, STAT_STEP_EXECUTED, returnVal);
 
@@ -141,7 +148,7 @@
 	        if (state !== STAT_EXECUTING && state !== STAT_PAUSED) {
 	            throw "cannot call pause unless state is " + STAT_EXECUTING + " or " + STAT_PAUSED + " current state is " + state;
 	        }
-	        setState.call(this, STAT_COMPLETED, currentStepIndex, lastResult);
+	        setState.call(this, STAT_BREAK, currentStepIndex, lastResult);
 	        return;
 	    };
 
@@ -165,6 +172,10 @@
         this.get = function (key) {
             return context[key];
         };
+
+        this.state = function () {
+            return state;
+        };
 	}
 
 	JSequencer.Sequencer = function(options) {
@@ -172,6 +183,7 @@
 
 		var stepCallback, stepContext;
 		var completedCallback, completedContext;
+		var breakCallback, breakContext;
 		var errorCallback, errorContext;
 		var failedCallback, failedContext;
 		var pausedCallback, pausedContext;
@@ -191,6 +203,11 @@
 				if (typeof completedCallback === "function"){
 				    completedCallback.call(completedContext, this, arguments[2]);
 				}
+			}
+			if (state === STAT_BREAK) {
+			    if (typeof breakCallback === "function") {
+			        breakCallback.call(breakContext, this, arguments[2]);
+			    }
 			}
 			else if (state === STAT_STEP_EXECUTED) {
 				if (typeof stepCallback === "function"){
