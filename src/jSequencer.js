@@ -17,7 +17,7 @@
 
 }(this, function(root, JSequencer){
 
-	// Save the previous value of the `Backbone` variable, so that it can be
+    // Save the previous value of the `JSequencer` variable, so that it can be
 	// restored later on, if `noConflict` is used.
 	var previousJSequencer = root.JSequencer;
 	
@@ -178,6 +178,72 @@
         };
 	}
 
+	function IfBuilder(thisContext, sequencer, predicate) {
+
+	    var elsed = false;
+
+	    var predicatesResult = [];
+	    function pathSelected() {
+	        for (var i in predicatesResult) {
+	            if (predicatesResult[i] === true) {
+	                return true;
+	            }
+	        }
+	        return false;
+	    }
+
+	    function predicateWrapper(predicate, execContext) {
+	        if (pathSelected() === false) {
+	            return predicate.call(this, execContext);
+	        }
+	    }
+
+	    function thenWrapper(clause, execContext, predicateResult) {
+	        if (pathSelected() === false) {
+	            predicatesResult.push(predicateResult);
+	            if (predicateResult) {
+	                clause.call(this, execContext);
+	            }
+	        }
+	    }
+
+	    function elseWrapper(clause, execContext) {
+	        if (pathSelected() === false) {
+	            predicatesResult.push(true);
+	            clause.call(this, execContext);
+	        }
+	    }
+
+	    sequencer.add(predicateWrapper, thisContext, [predicate]);
+
+	    this.then = function (thenClause) {
+	        if (elsed === true) {
+	            throw "final else already called, only endif function could be called";
+	        }
+	        sequencer.add(thenWrapper, thisContext, [thenClause]);
+	        return this;
+	    };
+
+	    this.elseif = function (predicate, thenClause) {
+	        if (elsed === true) {
+	            throw "final else already called, only endif function could be called";
+	        }
+	        sequencer.add(predicateWrapper, thisContext, [predicate]);
+	        sequencer.add(thenWrapper, thisContext, [thenClause]);
+	        return this;
+	    };
+
+	    this.else = function (elseFunc) {
+	        elsed = true;
+	        sequencer.add(elseWrapper, thisContext, [elseFunc]);
+	        return this;
+	    };
+
+	    this.endif = function () {
+	        return sequencer;
+	    };
+	}
+
 	JSequencer.Sequencer = function(options) {
 		var funcTable = [];
 
@@ -252,8 +318,8 @@
 		/*
 		 {
 			func: function to call,
-			context: function this object,
-			params: function params (could be array or another func and will use the same context)
+			context: functions' this object,
+			params: functions' params (could be array or another func and will use the same context)
 		 }
 		 // each func will be passed execution context
 		 */
@@ -279,6 +345,10 @@
 			});
 
 			return this;
+		};
+
+		this.if = function (predicate, context) {
+		    return new IfBuilder(context, this, predicate);
 		};
 
 		this.onStep = function (callback, context) {
@@ -315,6 +385,12 @@
 			resumedCallback = callback;
 			resumedContext = (context === undefined || context === null) ? options.defaultContext : context;
 			return this;
+		};
+
+		this.onBreak = function (callback, context) {
+		    breakCallback = callback;
+		    breakContext = (context === undefined || context === null) ? options.defaultContext : context;
+		    return this;
 		};
 
 		this.context = function () {

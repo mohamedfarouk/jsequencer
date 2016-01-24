@@ -1,0 +1,58 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+	<meta charset="utf-8" />
+    <script src="../dist/jSequencer-1.0.0.js"></script>
+    <script>
+        var result = 0;
+        var sequencer = new JSequencer.Sequencer({ resumeOnError: false })
+		.add(function (context, x) {
+		    result = result + 1;
+		    console.log("step to be run anyway");
+		})
+        .if(function () {
+            console.log("first condition true");
+            return true;
+        })
+        .then(function () {
+            result = result + 1;
+            console.log("should run");
+        })
+        .elseif(function () {
+            console.log("should not be called at all");
+            return true;
+        }, function () {
+            result = result + 1;
+            console.log("should not be called at all");
+        })
+        .else(function () {
+            result = result + 1;
+            console.log("should not be called at all");
+        })
+        .endif()
+        .add(function (context, x) {
+            result = result + 1;
+            console.log("step to be run anyway");
+        })
+        .onStep(function (context) { })
+		.onPaused(function (context) {  })
+		.onResumed(function (context) {  })
+		.onCompleted(function (context, x) {
+		    console.log('finished');
+		    if (result === 3) {
+		        console.log('success');
+		    }
+		    else {
+		        console.log('failed');
+		    }
+		})
+		.context();
+
+        sequencer.start(result);
+    </script>
+</head>
+<body>
+
+</body>
+</html>
