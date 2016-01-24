@@ -6,10 +6,13 @@
 		    result = result + 1
 		    console.log("step to be run anyway");
 		})
-        .if(function () {
-            result = result + 1
-            console.log("first condition true");
-            return true;
+        .if(function (context) {
+            context.pause();
+            setTimeout(function () {
+                console.log("first condition true");
+                result = result + 1
+                context.resume(true);
+            }, 5);
         })
         .then(function () {
             result = result + 1
