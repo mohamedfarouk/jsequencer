@@ -1,0 +1,50 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+	<meta charset="utf-8" />
+    <script src="../dist/jSequencer-1.0.0.js"></script>
+    <script>
+        var result = 0;
+        var sequencer = new JSequencer.Sequencer({ resumeOnError: false })
+		.add(function (context, x) {
+		    result = result + 1
+		    console.log("step to be run anyway");
+		})
+        .while(function (context) {
+            context.pause();
+            setTimeout(function () {
+                console.log("test result to be less than 5, current value = " + result);
+                var test = result < 5;
+                context.resume(test);
+            }, 5);
+        })
+        .do(function () {
+            console.log("incrementing result");
+            result = result + 1
+        })
+        .add(function (context, x) {
+            result = result + 1
+            console.log("step to be run anyway");
+        })
+        .onStep(function (context) { })
+		.onPaused(function (context) {  })
+		.onResumed(function (context) {  })
+		.onCompleted(function (context, x) {
+		    console.log('finished');
+		    if (result === 6) {
+		        console.log('success');
+		    }
+		    else {
+		        console.log('failed');
+		    }
+		})
+		.context();
+
+        sequencer.start(result);
+    </script>
+</head>
+<body>
+
+</body>
+</html>

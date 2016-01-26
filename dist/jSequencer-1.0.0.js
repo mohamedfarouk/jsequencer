@@ -1,5 +1,5 @@
 /**
- * jSequencer v1.0.0 - 2016-01-25
+ * jSequencer v1.0.0 - 2016-01-26
  * 
  *
  * Copyright (c) 2016 Mohamed Farouk <mohammed.farouk@hotmail.com>
@@ -188,35 +188,26 @@
 	function IfBuilder(thisContext, sequencer, predicate) {
 
 	    var elsed = false;
-
-	    var predicatesResult = [];
-	    function pathSelected() {
-	        for (var i in predicatesResult) {
-	            if (predicatesResult[i] === true) {
-	                return true;
-	            }
-	        }
-	        return false;
-	    }
-
+	    var pathSelected = false;
+	    
 	    function predicateWrapper(predicate, execContext) {
-	        if (pathSelected() === false) {
+	        if (pathSelected === false) {
 	            return predicate.call(this, execContext);
 	        }
 	    }
 
 	    function thenWrapper(clause, execContext, predicateResult) {
-	        if (pathSelected() === false) {
-	            predicatesResult.push(predicateResult);
+	        if (pathSelected === false) {
 	            if (predicateResult) {
+	                pathSelected = true;
 	                clause.call(this, execContext);
 	            }
 	        }
 	    }
 
 	    function elseWrapper(clause, execContext) {
-	        if (pathSelected() === false) {
-	            predicatesResult.push(true);
+	        if (pathSelected === false) {
+	            pathSelected = true;
 	            clause.call(this, execContext);
 	        }
 	    }
@@ -247,6 +238,45 @@
 	    };
 
 	    this.endif = function () {
+	        return sequencer;
+	    };
+	}
+
+	function WhileBuilder(thisContext, sequencer, funcTable, predicate) {
+
+	    var predicateIndex = funcTable.length;
+	    var whileBody = null;
+
+	    function predicateWrapper(predicate, execContext) {
+	        return predicate.call(this, execContext);
+	    }
+
+	    function doWrapper(clause, execContext, predicateResult) {
+	        if (predicateResult) {
+	            var predicateFunc = {
+	                context: thisContext,
+	                params: [predicate],
+	                func: predicateWrapper
+	            };
+	            var doClauseFunc = {
+	                context: thisContext,
+	                params: [whileBody],
+	                func: doWrapper
+	            };
+	            // if predicated evaluated to true, record the predicate,and do warpper 
+	            predicateIndex = predicateIndex + 2;
+                //inject them again for re-run them again
+	            funcTable.splice(predicateIndex, 0, predicateFunc, doClauseFunc);
+
+	            clause.call(this, execContext);
+	        }
+	    }
+
+	    sequencer.add(predicateWrapper, thisContext, [predicate]);
+
+	    this.do = function (doClause) {
+	        whileBody = doClause;
+	        sequencer.add(doWrapper, thisContext, [whileBody]);
 	        return sequencer;
 	    };
 	}
@@ -356,6 +386,10 @@
 
 		this.if = function (predicate, context) {
 		    return new IfBuilder(context, this, predicate);
+		};
+
+		this.while = function (predicate, context) {
+		    return new WhileBuilder(context, this, funcTable, predicate);
 		};
 
 		this.onStep = function (callback, context) {
