@@ -1,5 +1,5 @@
 /**
- * jSequencer v1.0.0 - 2016-01-26
+ * jSequencer v1.5.0 - 2016-01-26
  * 
  *
  * Copyright (c) 2016 Mohamed Farouk <mohammed.farouk@hotmail.com>
