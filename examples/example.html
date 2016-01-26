@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta charset="utf-8" />
+    <script src="../dist/jSequencer-1.0.0.js"></script>
+    <script src="jquery-2.1.3.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            var result = 1;
+            var sequencer = new JSequencer.Sequencer()
+            .add(function () {
+                return result * 100;
+            })
+            .add(function () {
+                return result - 50;
+            })
+            .add(function (context) {
+                context.pause();
+                console.log('paused');
+                $('#resume').click(function () {
+                    context.resume(result + 100);
+                });
+            })
+            .add(function () {
+                return result / 5;
+            })
+            .while(function () {
+                return result < 50;
+            })
+            .do(function () {
+                result = result + 1
+            })
+            .if(function () {
+                return result > 50;
+            })
+            .then(function () {
+                result = result + 1;
+            })
+            .elseif(function () {
+                return result < 50;
+            }, function () {
+                result = result + 1;
+            })
+            .else(function () {
+                result = result + 1;
+            })
+            .endif()
+            .onStep(function (context) { console.log('on step executed'); })
+            .onPaused(function (context) { console.log('on pause'); })
+            .onResumed(function (context) { console.log('on resume'); })
+            .onCompleted(function (context) {
+                console.log('on finished');
+                console.log(result);
+            })
+            .context();
+
+            sequencer.start();
+        });
+    </script>
+</head>
+<body>
+    <input type="button" id="resume" value="resume" />
+</body>
+</html>

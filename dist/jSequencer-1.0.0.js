@@ -284,6 +284,8 @@
 	JSequencer.Sequencer = function(options) {
 		var funcTable = [];
 
+		options = options || {};
+
 		var stepCallback, stepContext;
 		var completedCallback, completedContext;
 		var breakCallback, breakContext;
