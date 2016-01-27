@@ -1,27 +1,33 @@
 # JSequencer
 ### Motivation
-Get the power of workflows to javascript
-imagine having a sequence of operations done in flow like
+imagin having large number of call backs in sequence, somthing like
 
 ```javascript
-function multiplyBy(mul){
-    x = x * mul;
-}
-function add(plus){
-    x = x + plus;
-}
-
-var x = 1;
-multiplyBy(5);
-add(2);
-multiplyBy(10);
-console.log(x); 
+getData(function(a){  
+    getMoreData(a, function(b){
+        getMoreData(b, function(c){ 
+            getMoreData(c, function(d){ 
+                getMoreData(d, function(e){ 
+                    ...
+                });
+            });
+        });
+    });
+});
 ```
-this is how you would do sequence operations in javascript
-#####what if one of the functions is async ? the final result will change.
-#####what if some function should be run multiple times, or conditionally ??
+how about running this as a sequence
+```javascript
+var a = getData();
+var b = getMoreData(a);
+var c = getMoreData(b);
+var d = getMoreData(c);
+var e = getMoreData(d);
+```
+more readable, right ??
 
-this what JSequencer do.
+But for async operations, this is not practical, need some sort of sequencing 
+, and this what <b>JSequncer</b> does
+
 check below example
 ```javascript
 $(document).ready(function () {
@@ -77,11 +83,44 @@ $(document).ready(function () {
 });
 ```
 
-in this code, sequencer manages to call functions in sequence, pauses when needed to wait for an async operation (user clicks button), then resume flow afterwards
+in previous code block
+
+* create object of JSequencer
+* use <code>sequencer.add(callback)</code> to register step in the sequence
+* use <code>sequencer.while(predicate).do(callback)</code> to run step in a loop
+* use <code>sequencer.if(predicate).then(callback).else(callback).endif()</code> to make conditional flow
+* each callback function is passed context object as first parameter, and previous step result as second patameter
 
 ### Features
-ability to build logical sequence using
+
+- <b>support for async operations</b>
+``` javascript
+var result = 1;
+var sequencer = new JSequencer.Sequencer()
+.add(function () {
+    return result * 100;
+})
+.add(function () {
+    return result - 50;
+})
+.add(function (context) {
+    context.pause();
+    console.log('paused');
+    $('#resume').click(function () {
+        context.resume(result + 100);
+    });
+})
+.onCompleted(function (context) {
+    console.log('on finished');
+    console.log(result);
+})
+.context();
+ sequencer.start();
 ```
+just with a call to <code>context.pause()</code> instructs the sequencer to pause, then in callback, just call <code>context.resume('return value')</code> to resume the sequence , passing your return value
+*****
+- <b>Ability to build logical sequence using</b>
+``` javascript
 sequencer.if(predicate)
 .then(thenBody)
 .elseif(predicate, thenBody)
@@ -93,12 +132,14 @@ sequencer.if(predicate)
 .else(finalElseBody)
 .endif() //end if block
 ```
-ability to build while loops like
+*****
+- <b>Ability to build while loops like</b>
 ```
 sequencer.while(predicate)
 .do(whileBody)
 ```
-also you can hook into execution flow, by methods like
+*****
+- <b>Also you can hook into execution flow, by methods like</b>
 ```
 onStep(callback); \\ called after a step is executed
 onPaused(callback); \\ called after flow is paused
@@ -107,13 +148,15 @@ onError(callback); \\ called after a step fails in exception, enable to continue
 onFailed(callback); \\ called after flow failed to complete
 onCompleted(callback); \\ called after flow completed successfully
 ```
-
-every function in the flow gets context object and the result of the last function executed (as the last 2 arguments), the context object can be used for data sharing across steps and used for controlling the flow by below methods
+*****
+- <b>control over workflow using context parameter passed to every step</b>
 ```javascript
 context.pause(); //pauses the flow on the current step
 context.resume(data); // resume the flow, passing result of current step
 context.break(); //complete the current step, backout from the flow
 context.getResults();// returns array contains the result of each executed step in order
+context.set('key', value);// set / updates a value to be read by subsquent steps
+context.get('key');// get values stored in execution context by previous steps
 ```
 
 
