@@ -1,4 +1,11 @@
-﻿(function (root, factory) {
+/**
+ * jSequencer v1.5.1 - 2016-01-27
+ * 
+ *
+ * Copyright (c) 2016 Mohamed Farouk <mohammed.farouk@hotmail.com>
+ * Licensed MIT
+ */
+(function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         define(['exports'], function (exports) {
             // Export global even in AMD case in case this script is loaded with

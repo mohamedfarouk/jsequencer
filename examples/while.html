@@ -3,7 +3,7 @@
 <head>
     <title></title>
 	<meta charset="utf-8" />
-    <script src="../dist/jSequencer-1.0.0.js"></script>
+    <script src="../dist/jSequencer-1.5.1.js"></script>
     <script>
         var result = 0;
         var sequencer = new JSequencer.Sequencer({ resumeOnError: false })
@@ -21,7 +21,9 @@
         })
         .do(function () {
             console.log("incrementing result");
-            result = result + 1
+            result = result + 1;
+            if (result % 2 !== 0)
+                throw 'it is odd number, yaaay';
         })
         .add(function (context, x) {
             result = result + 1
@@ -29,7 +31,11 @@
         })
         .onStep(function (context) { })
 		.onPaused(function (context) {  })
-		.onResumed(function (context) {  })
+		.onResumed(function (context) { })
+        .onError(function (context, e) {
+            e.resume = true;
+            console.log('error happend "' + e.error + '" e.resume="' + e.resume + '"');
+        })
 		.onCompleted(function (context, x) {
 		    console.log('finished');
 		    if (result === 6) {
@@ -39,6 +45,11 @@
 		        console.log('failed');
 		    }
 		})
+        .onFailed(function (context, args) {
+            console.log('failed on step ' + args.stepIndex);
+            result = args.lastResult;
+            console.log(context.getResults());
+        })
 		.context();
 
         sequencer.start(result);

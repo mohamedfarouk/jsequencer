@@ -15,7 +15,7 @@ describe("error fail", function () {
     }
 
     beforeEach(function (done) {
-        var sequencer = new JSequencer.Sequencer({ resumeOnError: true })
+        var sequencer = new JSequencer.Sequencer({ resumeOnError: false })
 		.add(mul100)
 		.add(add100)
 		.add(sub50)

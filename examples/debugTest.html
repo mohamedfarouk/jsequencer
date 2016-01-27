@@ -1,0 +1,63 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta charset="utf-8" />
+    <script src="../dist/jSequencer-1.5.1.js"></script>
+    <script src="jquery-2.1.3.min.js"></script>
+    <script>
+        var result = 1;
+
+        function mul100(context, x) { return x * 100; }
+        function add100(context, x) { return x + 100; }
+        function sub50(context, x) { return x - 50; }
+        function div5(context, x) { return x / 5; }
+        function throwError(context, x) { throw "this is error step"; }
+        
+        $(document).ready(function () {
+            var sequencer = new JSequencer.Sequencer({ resumeOnError: false })
+            .add(mul100)
+            .add(add100)
+            .add(sub50)
+            .add(add100)
+            .add(throwError)
+            .add(mul100)
+            .add(div5)
+            .add(add100)
+            .add(mul100)
+            .add(div5)
+            .add(add100)
+            .onStep(function (context) { console.log('step executed'); })
+            .onPaused(function (context) { console.log('paused'); })
+            .onResumed(function (context) { console.log('resumed'); })
+            .onError(function (context, args) {
+                args.resume = false;
+                args.newResult = args.lastResult;
+                console.log('error happend "' + args.error + '" e.resume="' + args.resume + '"');
+            })
+            .onCompleted(function (context, x) {
+                console.log('finished');
+                result = x;
+                console.log('finished');
+                if (result === 6) {
+                    console.log('success');
+                }
+                else {
+                    console.log('failed');
+                }
+            })
+            .onFailed(function (context, args) {
+                console.log('failed on step ' + args.stepIndex);
+                result = args.lastResult;
+                console.log(context.getResults());
+            })
+            .context();
+
+            sequencer.start(result);
+        });
+    </script>
+</head>
+<body>
+    <input type="button" id="resume" value="resume" />
+</body>
+</html>
